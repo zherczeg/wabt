@@ -33,6 +33,7 @@
 #include "wabt/result.h"
 
 #include "wabt/interp/istream.h"
+#include "wabt/interp/jit/jit.h"
 
 namespace wabt {
 namespace interp {
@@ -323,6 +324,7 @@ struct FuncDesc {
   std::vector<LocalDesc> locals;
   u32 code_offset;  // Istream offset.
   std::vector<HandlerDesc> handlers;
+  ExecutableFunc executable;
 };
 
 struct TableDesc {
