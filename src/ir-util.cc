@@ -98,6 +98,22 @@ void ModuleContext::EndFunc() {
 ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
   switch (expr.type()) {
     case ExprType::ArrayGet:
+    case ExprType::AtomicLoad:
+    case ExprType::Convert:
+    case ExprType::Load:
+    case ExprType::LocalTee:
+    case ExprType::MemoryGrow:
+    case ExprType::Unary:
+    case ExprType::TableGet:
+    case ExprType::RefAsNonNull:
+    case ExprType::RefCast:
+    case ExprType::RefIsNull:
+    case ExprType::RefTest:
+    case ExprType::LoadSplat:
+    case ExprType::LoadZero:
+    case ExprType::StructGet:
+      return {1, 1};
+
     case ExprType::ArrayNew:
     case ExprType::ArrayNewData:
     case ExprType::ArrayNewElem:
@@ -211,22 +227,6 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       return {3, 0};
 
     case ExprType::ArrayNewDefault:
-    case ExprType::AtomicLoad:
-    case ExprType::Convert:
-    case ExprType::Load:
-    case ExprType::LocalTee:
-    case ExprType::MemoryGrow:
-    case ExprType::Unary:
-    case ExprType::TableGet:
-    case ExprType::RefAsNonNull:
-    case ExprType::RefCast:
-    case ExprType::RefIsNull:
-    case ExprType::RefTest:
-    case ExprType::LoadSplat:
-    case ExprType::LoadZero:
-    case ExprType::StructGet:
-      return {1, 1};
-
     case ExprType::Drop:
     case ExprType::GlobalSet:
     case ExprType::LocalSet:
@@ -271,6 +271,9 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
 
     case ExprType::TryTable:
       return {0, cast<TryTableExpr>(&expr)->block.decl.sig.GetNumResults()};
+
+    case ExprType::Ternary:
+      return {3, 1};
 
     case ExprType::GCUnary: {
       auto* gc_unary = cast<GCUnaryExpr>(&expr);
