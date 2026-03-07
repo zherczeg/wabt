@@ -691,9 +691,16 @@ struct Decompiler {
     assert(!el.empty());
     AST ast(mc, nullptr);
     ast.Construct(el, 1, 0, false);
+    assert(ast.exp_stack.size() == 1);
     auto val = DecompileExpr(ast.exp_stack[0], nullptr);
-    assert(ast.exp_stack.size() == 1 && val.v.size() == 1);
-    return std::move(val.v[0]);
+    std::string s;
+    for (size_t i = 0; i < val.v.size(); i++) {
+      if (i) {
+        s += "\n  ";
+      }
+      s += val.v[i];
+    }
+    return s;
   }
 
   // FIXME: Merge with WatWriter::WriteQuotedData somehow.

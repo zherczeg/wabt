@@ -130,17 +130,17 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
 
     case ExprType::BrOnCast: {
       Index arity = GetLabelArity(cast<BrOnCastExpr>(&expr)->label_var);
-      return {arity + 1, arity + 1};
+      return {arity, arity};
     }
 
     case ExprType::BrOnNonNull: {
       Index arity = GetLabelArity(cast<BrOnNonNullExpr>(&expr)->var);
-      return {arity + 1, arity};
+      return {arity, arity - 1};
     }
 
     case ExprType::BrOnNull: {
       Index arity = GetLabelArity(cast<BrOnNullExpr>(&expr)->var);
-      return {arity + 1, arity};
+      return {arity + 1, arity + 1};
     }
 
     case ExprType::BrTable:
@@ -164,7 +164,9 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
 
     case ExprType::CallRef: {
       const Var& var = cast<CallRefExpr>(&expr)->sig_type;
-      return {GetFuncParamCount(var) + 1, GetFuncResultCount(var)};
+      const FuncType* func_type = module.GetFuncType(var);
+      return {func_type ? func_type->GetNumParams() + 1 : 1,
+              func_type ? func_type->GetNumResults() : 0};
     }
 
     case ExprType::ReturnCallIndirect: {
@@ -174,8 +176,10 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     }
 
     case ExprType::ReturnCallRef: {
-      const Var& var = cast<CallRefExpr>(&expr)->sig_type;
-      return {GetFuncParamCount(var) + 1, GetFuncResultCount(var), true};
+      const Var& var = cast<ReturnCallRefExpr>(&expr)->sig_type;
+      const FuncType* func_type = module.GetFuncType(var);
+      return {func_type ? func_type->GetNumParams() + 1 : 1,
+              func_type ? func_type->GetNumResults() : 0, true};
     }
 
     case ExprType::Const:
@@ -209,7 +213,6 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::ArrayNewDefault:
     case ExprType::AtomicLoad:
     case ExprType::Convert:
-    case ExprType::GCUnary:
     case ExprType::Load:
     case ExprType::LocalTee:
     case ExprType::MemoryGrow:
@@ -269,8 +272,13 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
     case ExprType::TryTable:
       return {0, cast<TryTableExpr>(&expr)->block.decl.sig.GetNumResults()};
 
-    case ExprType::Ternary:
-      return {3, 1};
+    case ExprType::GCUnary: {
+      auto* gc_unary = cast<GCUnaryExpr>(&expr);
+      if (gc_unary->opcode == Opcode::RefEq) {
+        return {2, 1};
+      }
+      return {1, 1};
+    }
 
     case ExprType::SimdLaneOp: {
       const Opcode opcode = cast<SimdLaneOpExpr>(&expr)->opcode;
@@ -327,7 +335,7 @@ ModuleContext::Arities ModuleContext::GetExprArity(const Expr& expr) const {
       if (const StructType* struct_ = module.GetStructType(struct_new->var)) {
         operand_count = struct_->fields.size();
       }
-      return {operand_count, 0};
+      return {operand_count, 1};
     }
   }
 
