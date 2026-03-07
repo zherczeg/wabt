@@ -2595,6 +2595,9 @@ Result WastParser::ParsePlainInstr(std::unique_ptr<Expr>* out_expr) {
       if (options_->features.reference_types_enabled() &&
           PeekMatchLpar(TokenType::Result)) {
         CHECK_RESULT(ParseResultList(&expr->result_type, &result_type.vars));
+        if (!result_type.vars.empty()) {
+          resolve_type_vectors_.push_back(result_type);
+        }
       }
       *out_expr = std::move(expr);
       break;

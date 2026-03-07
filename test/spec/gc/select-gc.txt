@@ -1,0 +1,18 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+(module
+  (type $s (struct (field i32)))
+  (type $a (array i32))
+  (func (param (ref null $s)) (param (ref null $s)) (param i32) (result (ref null $s))
+    local.get 0
+    local.get 1
+    local.get 2
+    select (result (ref null $s))
+  )
+  (func (param (ref null $a)) (param (ref null $a)) (param i32) (result (ref null $a))
+    local.get 0
+    local.get 1
+    local.get 2
+    select (result (ref null $a))
+  )
+)

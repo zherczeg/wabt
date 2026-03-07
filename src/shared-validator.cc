@@ -1152,13 +1152,19 @@ Result SharedValidator::OnBrIf(const Location& loc, Var depth) {
 }
 
 Result SharedValidator::OnBrOnCast(const Location& loc,
-                                   Opcode opcode,
-                                   Var depth,
+                                   Opcode opcode, Var depth,
                                    Var type1_var,
                                    Var type2_var) {
-  Result result = CheckInstr(Opcode::BrOnCast, loc);
-  result |= typechecker_.OnBrOnCast(opcode, depth.index(), type1_var.to_type(),
-                                    type2_var.to_type());
+  Result result = CheckInstr(opcode, loc);
+  Type type1 = type1_var.to_type();
+  Type type2 = type2_var.to_type();
+  if (type1.IsReferenceWithIndex()) {
+    result |= CheckIndex(type1_var, type_fields_.NumTypes(), "type index");
+  }
+  if (type2.IsReferenceWithIndex()) {
+    result |= CheckIndex(type2_var, type_fields_.NumTypes(), "type index");
+  }
+  result |= typechecker_.OnBrOnCast(opcode, depth.index(), type1, type2);
   return result;
 }
 
@@ -1514,7 +1520,11 @@ Result SharedValidator::OnRefAsNonNull(const Location& loc) {
 
 Result SharedValidator::OnRefCast(const Location& loc, Var type_var) {
   Result result = CheckInstr(Opcode::RefCast, loc);
-  result |= typechecker_.OnRefCast(type_var.to_type());
+  Type type = type_var.to_type();
+  if (type.IsReferenceWithIndex()) {
+    result |= CheckIndex(type_var, type_fields_.NumTypes(), "type index");
+  }
+  result |= typechecker_.OnRefCast(type);
   return result;
 }
 
@@ -1548,7 +1558,7 @@ Result SharedValidator::OnRefNull(const Location& loc, Var func_type_var) {
 
   if (type == Type::RefNull) {
     result |=
-        CheckIndex(func_type_var, type_fields_.NumTypes(), "function type");
+        CheckIndex(func_type_var, type_fields_.NumTypes(), "type index");
   } else if (!type.IsNonTypedRef()) {
     result |= PrintError(loc, "Only nullable reference types are allowed");
   }
@@ -1560,7 +1570,11 @@ Result SharedValidator::OnRefNull(const Location& loc, Var func_type_var) {
 
 Result SharedValidator::OnRefTest(const Location& loc, Var type_var) {
   Result result = CheckInstr(Opcode::RefTest, loc);
-  result |= typechecker_.OnRefTest(type_var.to_type());
+  Type type = type_var.to_type();
+  if (type.IsReferenceWithIndex()) {
+    result |= CheckIndex(type_var, type_fields_.NumTypes(), "type index");
+  }
+  result |= typechecker_.OnRefTest(type);
   return result;
 }
 
@@ -1624,8 +1638,7 @@ Result SharedValidator::OnSelect(const Location& loc,
     if (result_types[i].IsReferenceWithIndex()) {
       Index index = result_types[i].GetReferenceIndex();
 
-      if (index >= type_fields_.NumTypes() ||
-          type_fields_.type_entries[index].kind != Type::FuncRef) {
+      if (index >= type_fields_.NumTypes()) {
         result |=
             PrintError(loc, "reference %" PRIindex " is out of range", index);
       }

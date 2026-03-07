@@ -1,0 +1,24 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-gc
+;;; ERROR: 1
+(module
+  (type $s (struct (field i32)))
+  (func (param (ref $s)) (param (ref $s)) (param i32) (result (ref $s))
+    local.get 0
+    local.get 1
+    local.get 2
+    ;; Typed select with out of range index
+    select (result (ref null 100))
+  )
+)
+(;; STDERR ;;;
+out/test/parse/bad-gc-references.txt:11:5: error: reference 100 is out of range
+    select (result (ref null 100))
+    ^^^^^^
+out/test/parse/bad-gc-references.txt:11:5: error: type mismatch in select, expected [(ref null 100), (ref null 100), i32] but got [(ref 0), (ref 0), i32]
+    select (result (ref null 100))
+    ^^^^^^
+out/test/parse/bad-gc-references.txt:11:5: error: type mismatch in implicit return, expected [(ref 0)] but got [(ref null 100)]
+    select (result (ref null 100))
+    ^^^^^^
+;;; STDERR ;;)
