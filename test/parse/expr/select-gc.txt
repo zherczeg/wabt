@@ -1,0 +1,41 @@
+;;; TOOL: wat2wasm
+;;; ARGS: --enable-all
+(module
+  (type $struct (struct (field i32)))
+  (type $array (array i32))
+
+  (func (export "select-struct") (param $x (ref null $struct)) (param $y (ref null $struct)) (param $cond i32) (result (ref null $struct))
+    local.get $x
+    local.get $y
+    local.get $cond
+    select (result (ref null $struct))
+  )
+
+  (func (export "select-array") (param $x (ref null $array)) (param $y (ref null $array)) (param $cond i32) (result (ref null $array))
+    local.get $x
+    local.get $y
+    local.get $cond
+    select (result (ref null $array))
+  )
+
+  (func (export "select-i31") (param $x (ref null i31)) (param $y (ref null i31)) (param $cond i32) (result (ref null i31))
+    local.get $x
+    local.get $y
+    local.get $cond
+    select (result (ref null i31))
+  )
+
+  (func (export "select-extern") (param $x externref) (param $y externref) (param $cond i32) (result externref)
+    local.get $x
+    local.get $y
+    local.get $cond
+    select (result externref)
+  )
+
+  (func (export "select-func") (param $x funcref) (param $y funcref) (param $cond i32) (result funcref)
+    local.get $x
+    local.get $y
+    local.get $cond
+    select (result funcref)
+  )
+)

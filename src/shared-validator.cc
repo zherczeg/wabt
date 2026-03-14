@@ -1625,8 +1625,7 @@ Result SharedValidator::OnSelect(const Location& loc,
     if (result_types[i].IsReferenceWithIndex()) {
       Index index = result_types[i].GetReferenceIndex();
 
-      if (index >= type_fields_.NumTypes() ||
-          type_fields_.type_entries[index].kind != Type::FuncRef) {
+      if (index >= type_fields_.NumTypes()) {
         result |=
             PrintError(loc, "reference %" PRIindex " is out of range", index);
       }
